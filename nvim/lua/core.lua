@@ -1,6 +1,7 @@
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ","
 vim.g.home = vim.fn.expand("~")
+vim.g.python3_host_prog = vim.g.home .. '/repos/scripts/venv3.12/bin/ipython'
 
 vim.cmd 'syntax on'
 vim.cmd 'filetype plugin indent on'

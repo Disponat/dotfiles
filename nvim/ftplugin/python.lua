@@ -1,5 +1,3 @@
-vim.g.python3_host_prog = vim.g.home .. '/repos/scripts/venv3.12/bin/ipython'
-
 -- iron also has a list of commands, see :h iron-commands for all available commands
 vim.api.nvim_set_keymap('n', '<leader>rs', '<cmd>IronRepl<cr>', {noremap = true}) -- Show/hide REPL
 vim.api.nvim_set_keymap('n', '<leader>rr', '<cmd>IronRestart<cr>', {noremap = true})

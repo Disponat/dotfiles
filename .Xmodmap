@@ -1,0 +1,8 @@
+keysym Menu = Mode_switch
+add Mod3 = Mode_switch
+keysym a = a A Greek_alpha Greek_ALPHA
+keysym b = b B Greek_beta Greek_BETA
+keysym g = g G Greek_gamma Greek_GAMMA
+keysym u = u U Greek_mu Greek_MU
+keysym d = d D Greek_delta Greek_DELTA
+keysym space = space space Hiragana_Katakana

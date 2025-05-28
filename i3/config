@@ -1,16 +1,16 @@
-# this file and re-run i3-config-wizard(1).
-#
-
 # i3 config file (v4)
-#
 # Please see https://i3wm.org/docs/userguide.html for a complete reference!
 
+### MOD KEYS ###
 set $mod Mod1
 set $win Mod4
-
-# in Xmodmap, I mapped the Menu key to Mode_switch
-exec_always --no-startup-id xmodmap ~/.Xmodmap
 set $mode Mode_switch
+
+# Without --no-startup-id, we get a busy cursor
+set $run exec --no-startup-id
+set $run_always exec_always --no-startup-id
+
+### WORKSPACES ###
 
 set $ws1 "1: Terminal"
 set $ws2 "2: Browser"
@@ -20,14 +20,16 @@ set $ws5 "5: Undefined"
 set $ws6 "6: Undefined"
 set $ws7 "7: Undefined"
 set $ws8 "8: Undefined"
-set $ws9 "9: Undefined"
-set $ws10 "10"
+set $ws9 "9: Music"
+set $ws10 "10: Settings"
 
-# Font for window titles. Will also be used by the bar unless a different font
-# is used in the bar {} block below.k
-font pango:monospace 8
+
+### GLOBAL STYLE ###
+font pango: DepartureMono Nerd Font Mono 9
+# font pango:monospace 8
 for_window [all] title_window_icon on
 for_window [all] title_format <span foreground="#ffffff" weight="bold">%title</span>
+show_marks yes
 # class                 border  backgr. text    indicator child_border
 client.focused          #000000 #bd4f74 #000000 #000000   #bd4f74
 client.focused_inactive #000000 #333333 #000000 #000000   #000000
@@ -36,93 +38,114 @@ for_window [all] border normal 3
 
 # Hide border when there is only one window on screen
 hide_edge_borders smart
-# gaps inner 20
-# gaps outer 20
+# gaps inner 30
+# gaps outer 30
 
-# This font is widely installed, provides lots of unicode glyphs, right-to-left
-# text rendering and scalability on retina/hidpi displays (thanks to pango).
-#font pango:DejaVu Sans Mono 8
+# #mod + mouse to drag or resize
+floating_modifier $mod
+tiling_drag modifier titlebar
 
-# Start XDG autostart .desktop files using dex. See also
-# https://wiki.archlinux.org/index.php/XDG_Autostart
-exec --no-startup-id dex --autostart --environment i3
+### AUTOSTART APPLICATIONS ###
 
-exec_always --no-startup-id killall -q
-exec_always --no-startup-id $HOME/.config/polybar/launch.sh
+# Start XDG autostart .desktop files using dex. 
+# $run dex --autostart --environment i3
 
-# Hides cursor when not in use: https://github.com/Airblader/unclutter-xfixes 
-exec_always --no-startup-id unclutter-xfixes -idle 1
+# in Xmodmap, I mapped the Menu key to Mode_switch
+$run_always "feh --no-fehbg --bg-scale /usr/share/backgrounds/whats_up_pop_pink.png"
+$run_always picom
+
+$run_always pactl set-default-sink alsa_output.pci-0000_0a_00.1.hdmi-stereo
+
+# Keyboard maps and languages
+$run_always xmodmap ~/.Xmodmap
+$run fcitx5
+
+$run_always killall -q
+$run_always $HOME/.config/polybar/launch.sh
+
+$run_always pkill dunst; dunst &
 
 # Set keyboard key repeat rate
-exec --no-startup-id xset r rate 250 80
+$run_always xset r rate 250 80
 
-exec --no-startup-id i3-msg 'workspace $ws1; exec gnome-terminal'
+# The latest firefox window will be marked with f
+assign [class="firefox"] $ws2
+for_window [class="firefox"] mark f
+$run firefox
 
-assign [class="firefox"] $ws2 
-exec --no-startup-id firefox
+# The latest ranger window will be marked with r
+$run i3-msg 'workspace $ws3; exec gnome-terminal -- bash -c "ranger"'
+for_window [title="Ranger"] mark r
 
-
-exec --no-startup-id i3-msg 'workspace $ws3; exec gnome-terminal -e "ranger"'
-
+# option: --start-minimized
+$run discord
 assign [class="discord"] $ws4
-exec --no-startup-id discord
-for_window [class="discord"] floating enable, resize set 1000 700, move position center
+for_window [class="discord"] mark d
 
-exec_always --no-startup-id picom
-exec_always --no-startup-id "feh --no-fehbg --bg-scale /usr/share/backgrounds/whats_up_pop_pink.png"
+$run gnome-terminal --title="btop" -- bash -c "btop"
+for_window [class="Gnome-terminal" title="btop"] move workspace $ws10
+for_window [class="Gnome-terminal" title="btop"] mark b
 
-# Keyboard languages
-exec --no-startup-id fcitx5
+$run gnome-terminal --title="MOC" -- bash -c "mocp"
+for_window [class="Gnome-terminal" title="MOC"] mark m
+for_window[class="Gnome-terminal" title="MOC"] move workspace $ws9
 
-# The combination of xss-lock, nm-applet and pactl is a popular choice, so
-# they are included here as an example. Modify as you see fit.
+# End on workspace 1
+$run i3-msg 'workspace $ws1; exec gnome-terminal --title="Terminal-A"'
+for_window[title="Terminal-A"] mark a
+
+# Hides cursor when not in use: https://github.com/Airblader/unclutter-xfixes 
+$run unclutter-xfixes -idle 1
 
 # xss-lock grabs a logind suspend inhibit lock and will use i3lock to lock the
 # screen before suspend. Use loginctl lock-session to lock your screen.
-exec --no-startup-id xss-lock --transfer-sleep-lock -- i3lock -i /usr/share/backgrounds/whats_up_pop_pink_lock.png --nofork
+$run xss-lock --transfer-sleep-lock -- i3lock -i /usr/share/backgrounds/whats_up_pop_pink_lock.png --nofork
 
 # NetworkManager is the most popular way to manage wireless networks on Linux,
 # and nm-applet is a desktop environment-independent system tray GUI for it.
-exec --no-startup-id nm-applet
+$run nm-applet
+
+### KEYBINDS ###
 
 # Use pactl to adjust volume in PulseAudio.
 set $refresh_i3status killall -SIGUSR1 i3status
-bindsym XF86AudioRaiseVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ +10% && $refresh_i3status
-bindsym XF86AudioLowerVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ -10% && $refresh_i3status
-bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle && $refresh_i3status
-bindsym Shift+XF86AudioRaiseVolume exec --no-startup-id pactl set-source-volume @DEFAULT_SOURCE@ +10% && $refresh_i3status
-bindsym Shift+XF86AudioLowerVolume exec --no-startup-id pactl set-source-volume @DEFAULT_SOURCE@ -10% && $refresh_i3status
-bindsym Shift+XF86AudioMute exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle && $refresh_i3status
-bindsym XF86AudioMicMute exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle && $refresh_i3status
+bindsym XF86AudioRaiseVolume $run pactl set-sink-volume @DEFAULT_SINK@ +10% && $refresh_i3status
+bindsym XF86AudioLowerVolume $run pactl set-sink-volume @DEFAULT_SINK@ -10% && $refresh_i3status
+bindsym XF86AudioMute $run pactl set-sink-mute @DEFAULT_SINK@ toggle && $refresh_i3status
+bindsym Shift+XF86AudioRaiseVolume $run pactl set-source-volume @DEFAULT_SOURCE@ +10% && $refresh_i3status
+bindsym Shift+XF86AudioLowerVolume $run pactl set-source-volume @DEFAULT_SOURCE@ -10% && $refresh_i3status
+bindsym Shift+XF86AudioMute $run pactl set-source-mute @DEFAULT_SOURCE@ toggle && $refresh_i3status
+bindsym XF86AudioMicMute $run pactl set-source-mute @DEFAULT_SOURCE@ toggle && $refresh_i3status
 
+bindsym XF86AudioStop $run $HOME/.moc/toggle_play.sh
+bindsym Shift+XF86AudioNext $run mocp -f
+bindsym Shift+XF86AudioPrev $run mocp -r
 
-bindsym Print exec flameshot gui --clipboard --pin --path ~/Pictures
-bindsym Shift+Print exec flameshot screen --clipboard --pin --path ~/Pictures
-# Use Mouse+$mod to drag floating windows to their wanted position
-floating_modifier $mod
+# Add binds to play/stop music
 
-# move tiling windows via drag & drop by left-clicking into the title bar,
-# or left-clicking anywhere into the window while holding the floating modifier.
-tiling_drag modifier titlebar
+# read 1 character and mark the current window with this character
+bindsym $mod+m $run i3-input -F 'mark %s' -l 1 -P 'Mark: '
+
+# read 1 character and go to the window with the character
+# $run i3-input -F '[con_mark="%s"]scratchpad show' -l 1
+bindsym $mod+apostrophe $run i3-input -F '[con_mark="%s"] focus' -l 1
+bindsym $mod+shift+apostrophe $run i3-input -F '[con_mark=%s] scratchpad show' -l 1
+
+bindsym Print $run flameshot gui --clipboard --pin --path ~/Pictures
+bindsym Shift+Print $run flameshot screen --clipboard --pin --path ~/Pictures
+
 
 # start a terminal
-bindsym $mod+Return exec i3-sensible-terminal
+bindsym $mod+Return $run i3-sensible-terminal
 
 for_window [class="floatingterm"] floating enable
-bindsym $win+Return exec --no-startup-id gnome-terminal --class=floatingterm
+bindsym $win+Return $run gnome-terminal --class=floatingterm
 
 # kill focused window
 bindsym $mod+Shift+q kill
 
 # start dmenu (a program launcher)
-# bindsym $mod+d exec --no-startup-id dmenu_run
- bindsym $mod+d exec --no-startup-id $HOME/.config/rofi/launchers/type-3/launcher.sh
-
-# A more modern dmenu replacement is rofi:
-# bindcode $mod+40 exec "rofi -modi drun,run -show drun"
-# There also is i3-dmenu-desktop which only displays applications shipping a
-# .desktop file. It is a wrapper around dmenu, so you need that installed.
-# bindcode $mod+40 exec --no-startup-id i3-dmenu-desktop
+ bindsym $mod+d $run $HOME/.config/rofi/launchers/type-3/launcher.sh
 
 # change focus
 bindsym $mod+h focus left
@@ -229,14 +252,27 @@ bindsym $mode+Shift+8 move container to workspace $ws8
 bindsym $mode+Shift+9 move container to workspace $ws9
 bindsym $mode+Shift+0 move container to workspace $ws10
 
+# Intended for floating windows: Move to particular area
+# Later: Replace by shell script to make them specific
+# to floating windows and move relative to current position
+bindsym $win+c [floating] move position center
+bindsym $win+h [floating] resize set 640 400, move position 0 340
+bindsym $win+j [floating] resize set 640 400, move position 640 680
+bindsym $win+k [floating] resize set 640 400, move position 640 0
+bindsym $win+l [floating] resize set 640 400, move position 1280 340
+
+bindsym Shift+$win+h resize set 640 400, move position 0 0
+bindsym Shift+$win+j resize set 640 400, move position 0 680
+bindsym Shift+$win+k resize set 640 400, move position 1280 680
+bindsym Shift+$win+l resize set 640 400, move position 1280 0
 
 # reload the configuration file
 bindsym $mod+Shift+c reload
 # restart i3 inplace (preserves your layout/session, can be used to upgrade i3)
 bindsym $mod+Shift+r restart
 # exit i3 (logs you out of your X session)
-# bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -B 'Yes, exit i3' 'i3-msg exit'"
-bindsym $mod+Shift+e exec $HOME/.config/rofi/powermenu/type-2/powermenu.sh
+# bindsym $mod+Shift+e $run "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -B 'Yes, exit i3' 'i3-msg exit'"
+bindsym $mod+Shift+e $run $HOME/.config/rofi/powermenu/type-2/powermenu.sh
 
 # resize window (you can also use the mouse for that)
 mode "resize" {
@@ -257,7 +293,8 @@ mode "resize" {
         bindsym Up resize shrink height 10 px or 10 ppt
         bindsym Right resize grow width 10 px or 10 ppt
 
-        bindsym $mod+c move position center
+
+        bindsym $mod+Shift+space floating toggle
 
         # back to normal: Enter or Escape or $mod+r
         bindsym Return mode "default"
